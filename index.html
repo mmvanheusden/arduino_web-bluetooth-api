@@ -1,0 +1,28 @@
+<!doctype html>
+<html>
+    <head>
+        <script src="main.js"></script>
+    </head>
+    <body>
+        <button onclick="connectToESP()" id="connect">Connect</button>
+        <br>
+        LED state: <span id="led_state">Unknown</span>
+        <br>
+
+        <button onclick="toggleLed()" id="toggle_led" disabled>
+            Toggle LED
+        </button>
+        <br>
+        <br>
+        <button id="disconnect" onclick="disconnectESP()" disabled>
+            Disconnect
+        </button>
+
+        <br>
+        <b>Connected to: </b><span id="device_name"></span>
+        <br>
+        <br>
+        <hr>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Bluetooth_API">Docs</a>
+    </body>
+</html>
