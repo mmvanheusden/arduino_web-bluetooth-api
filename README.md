@@ -5,7 +5,7 @@ Arduino becomes Bluetooth device that can be read and written to from a webinter
 
 Tested on Arduino Nano ESP32 & Chromium on Linux
 
-* Enable `#enable-web-bluetooth` flag in `chrome://flags`.
+* Enable `#enable-web-bluetooth` flag in `chrome://flags`. OR run chromium with `chromium-browser --enable-features=WebBluetooth`
 * Flash `arduino.ino` sketch to Arduino.
 * Run with:
 ```shell
