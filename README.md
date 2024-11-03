@@ -14,3 +14,13 @@ Connect Leaphy ambient light sensor through Leaphy Delphy or something else to a
 ```shell
 $ npx live-server .
 ```
+
+### TODO:
+The device should have a [Device information Service](https://www.bluetooth.com/specifications/specs/dis-1-2/). As many of its required [characteristics](https://www.bluetooth.com/wp-content/uploads/Files/Specification/HTML/DIS_v1.2/out/en/index-en.html#UUID-11cbfd5c-b7fa-3d12-0f0c-3fdbbd2e4efb) should be implemented.
+This is useful because it enables external systems to access device information (like model numbers, etc)
+
+
+### Resources
+* https://webbluetoothcg.github.io/web-bluetooth/
+* https://github.com/WebBluetoothCG/registries
+* https://docs.arduino.cc/libraries/arduinoble

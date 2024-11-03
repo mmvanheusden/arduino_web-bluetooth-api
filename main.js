@@ -2,6 +2,8 @@
 const SERVICE_UUID = "a3a671c0-a063-444d-86b9-34fd0255d897";
 const LED_CHARACTERISTIC_UUID = "a3a671c1-a063-444d-86b9-34fd0255d897";
 const LIGHT_CHARACTERISTIC_UUID = "a3a671c2-a063-444d-86b9-34fd0255d897";
+const RGB_LED_CHARACTERISTIC_UUID = "a3a671c3-a063-444d-86b9-34fd0255d897";
+
 
 const BT_OPTIONS = {
   filters: [
@@ -15,6 +17,7 @@ const BT_OPTIONS = {
 let led;
 let light;
 let server;
+let rgbLed;
 
 async function getLedState() {
   return (await led.readValue()).getUint8();
@@ -62,13 +65,24 @@ async function connectToESP() {
     LIGHT_CHARACTERISTIC_UUID,
   );
 
+  rgbLed = await getCharacteristic(
+    server,
+    SERVICE_UUID,
+    RGB_LED_CHARACTERISTIC_UUID,
+  );
+
   console.debug(
     `Connected to ESP: ${device.name}. LED is currently ${(await led.readValue()).getUint8(0)}. Light level is ${await getLightAmount()}%`,
   );
 
+  // set RGB LED and color picker to same value.
+  document.getElementById("color_picker").value = "#ff9900"
+  await changeRGBLEDColor(hexToRgb("ff9900"));
+
   document.getElementById("toggle_led").disabled = false;
   document.getElementById("connect").disabled = true;
   document.getElementById("disconnect").disabled = false;
+  document.getElementById("color_picker").disabled = false;
   document.getElementById("device_name").innerText = device.name;
 
   updateLedStateFrontend();
@@ -97,4 +111,25 @@ async function disconnectESP() {
   document.getElementById("toggle_led").disabled = true;
   document.getElementById("connect").disabled = false;
   document.getElementById("disconnect").disabled = true;
+  document.getElementById("color_picker").disabled = true;
+}
+
+
+async function changeRGBLEDColor(color) {
+  // console.log(new Uint8Array([color.r, color.g, color.b]))
+  await rgbLed.writeValue(new Uint8Array([color.r, color.g, color.b]))
+}
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+window.onload = function () {
+  document.getElementById("color_picker").addEventListener("input", async function (event) {
+    await changeRGBLEDColor(hexToRgb(event.target.value));
+  })
 }

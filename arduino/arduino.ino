@@ -6,6 +6,8 @@
 #define SERVICE_UUID        "a3a671c0-a063-444d-86b9-34fd0255d897"
 #define LED_CHARACTERISTIC_UUID "a3a671c1-a063-444d-86b9-34fd0255d897"
 #define LIGHT_CHARACTERISTIC_UUID "a3a671c2-a063-444d-86b9-34fd0255d897"
+#define RGB_CHARACTERISTIC_UUID "a3a671c3-a063-444d-86b9-34fd0255d897"
+
 
 
 const int LED_PIN = LED_BUILTIN; // pin to use for the LED
@@ -15,7 +17,8 @@ const int LEAPHY_AMBIENT_LIGHT_SENSOR = A0;
 BLEService arduinoService(SERVICE_UUID);
 
 // Create characteristics, set read/write permissions
-BLEByteCharacteristic ledCharacteristic(LED_CHARACTERISTIC_UUID, BLERead | BLEWrite);
+BLEBoolCharacteristic ledCharacteristic(LED_CHARACTERISTIC_UUID, BLERead | BLEWrite);
+BLECharacteristic rgbCharacteristic(RGB_CHARACTERISTIC_UUID, BLEWrite | BLERead, 3); // length of 3 bytes
 BLEByteCharacteristic lightCharacteristic(LIGHT_CHARACTERISTIC_UUID, BLERead);
 
 
@@ -23,10 +26,11 @@ void setup() {
   Serial.begin(9600);
   // while (!Serial); uncomment to wait for serial monitor
 
-  // set LED pin to output mode
+  // Set pinmodes  
+  pinMode(LED_RED, OUTPUT);
+  pinMode(LED_GREEN, OUTPUT);
+  pinMode(LED_BLUE, OUTPUT);
   pinMode(LED_PIN, OUTPUT);
-  // Turn LED off.
-  digitalWrite(LED_PIN, LOW);
 
 
   // begin initialization
@@ -42,6 +46,8 @@ void setup() {
   // Add the characteristics to the service
   arduinoService.addCharacteristic(ledCharacteristic);
   arduinoService.addCharacteristic(lightCharacteristic);
+  arduinoService.addCharacteristic(rgbCharacteristic);
+
 
 
   // add our service
@@ -50,8 +56,17 @@ void setup() {
   // Advertise the service. This is essential because this is how we can later recognise our Bluetooth signal.
   BLE.setAdvertisedService(arduinoService);
 
-  // Set the value of the characteristic to 0. Will be same as LED state
-  ledCharacteristic.writeValue(0);
+
+  // Turn LED off and set LED characteristic to 0
+  digitalWrite(LED_PIN, LOW);
+  ledCharacteristic.writeValue(false);
+
+  // Turn RGB LED off and set its characteristic
+  digitalWrite(LED_RED, HIGH);
+  digitalWrite(LED_GREEN, HIGH);
+  digitalWrite(LED_BLUE, HIGH);
+  byte rgb_off[3] = {0, 0, 0};
+  rgbCharacteristic.writeValue(rgb_off, 3);
 
   // start advertising
   BLE.advertise();
@@ -76,9 +91,9 @@ void loop() {
       int lightPercentage = (round(sensorValue) / 4096 * 100);
 
       // Print out the value you read:
-      Serial.printf("Leaphy light sensor reads: ");
-      Serial.print(lightPercentage);
-      Serial.println("%");
+      // Serial.printf("Leaphy light sensor reads: ");
+      // Serial.print(lightPercentage);
+      // Serial.println("%");
       lightCharacteristic.writeValue(lightPercentage);
       
 
@@ -91,6 +106,19 @@ void loop() {
           Serial.println(F("LED off"));
           digitalWrite(LED_PIN, LOW);  // off
         }
+      }
+
+
+      if (rgbCharacteristic.written()) {
+          // Serial.println(rgbCharacteristic.value()[0]);
+          // Serial.println(rgbCharacteristic.value()[1]);
+          // Serial.println(rgbCharacteristic.value()[2]);
+
+          
+          // for some reason 255 is off, 0 is on
+          analogWrite(LED_RED, (255 - rgbCharacteristic.value()[0]));
+          analogWrite(LED_GREEN, (255 - rgbCharacteristic.value()[1]));
+          analogWrite(LED_BLUE, (255 - rgbCharacteristic.value()[2]));
       }
     }
 
