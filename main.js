@@ -1,21 +1,27 @@
-// The GATT service and characteristics. These are used to recognise our ESP
-const LED_SERVICE_UUID = "a3a671c0-a063-444d-86b9-34fd0255d897";
+// The GATT service and characteristics
+const SERVICE_UUID = "a3a671c0-a063-444d-86b9-34fd0255d897";
 const LED_CHARACTERISTIC_UUID = "a3a671c1-a063-444d-86b9-34fd0255d897";
+const LIGHT_CHARACTERISTIC_UUID = "a3a671c2-a063-444d-86b9-34fd0255d897";
 
 const BT_OPTIONS = {
   filters: [
     {
-      services: [LED_SERVICE_UUID], // Our LED service
+      services: [SERVICE_UUID], // Our service. Used to recognise our ESP
     },
   ],
   // acceptAllDevices: true
 };
 
 let led;
+let light;
 let server;
 
 async function getLedState() {
-  return (await led.readValue()).getUint8(0);
+  return (await led.readValue()).getUint8();
+}
+
+async function getLightAmount() {
+  return (await light.readValue()).getUint8();
 }
 
 async function toggleLed() {
@@ -29,8 +35,12 @@ async function toggleLed() {
 
 async function updateLedStateFrontend() {
   document.getElementById("led_state").innerText = await getLedState() ? "ON" : "OFF";
-
 }
+
+async function updateLightAmountFrontend() {
+  document.getElementById("light_percentage").innerText = await getLightAmount()
+}
+
 
 function writeCharacteristic(characteristic, value) {
   characteristic.writeValue(new Uint8Array([value]));
@@ -42,12 +52,18 @@ async function connectToESP() {
 
   led = await getCharacteristic(
     server,
-    LED_SERVICE_UUID,
+    SERVICE_UUID,
     LED_CHARACTERISTIC_UUID,
   );
 
+  light = await getCharacteristic(
+    server,
+    SERVICE_UUID,
+    LIGHT_CHARACTERISTIC_UUID,
+  );
+
   console.debug(
-    `Connected to ESP: ${device.name}. LED is currently ${(await led.readValue()).getUint8(0)}`,
+    `Connected to ESP: ${device.name}. LED is currently ${(await led.readValue()).getUint8(0)}. Light level is ${await getLightAmount()}%`,
   );
 
   document.getElementById("toggle_led").disabled = false;
@@ -56,6 +72,9 @@ async function connectToESP() {
   document.getElementById("device_name").innerText = device.name;
 
   updateLedStateFrontend();
+  while (server.connected) {
+    await updateLightAmountFrontend();
+  }
 }
 
 async function getCharacteristic(gattServer, serviceUUID, characteristicUUID) {
